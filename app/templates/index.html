@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>BBC Good Food Crawler</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<h1>BBC Good Food Recipe Crawler</h1>
+<button onclick="startCrawl()">Start Crawl</button>
+<div id="progressContainer">
+  <div id="progressBar">0%</div>
+</div>
+<pre id="status"></pre>
+<a href="/download" target="_blank">Download Mealie URL File</a>
+
+<script>
+async function startCrawl() {
+    const resp = await fetch('/start'); // Implement /start in main.py
+}
+</script>
+</body>
+</html>
