@@ -5,7 +5,10 @@ services:
     build: .
     container_name: bbc_goodfood_crawler
     ports:
-      - "8111:8111"
+      - "8000:8000"
     volumes:
-      - ./data:/app/data
+      - data:/app/data
     restart: unless-stopped
+
+volumes:
+  data:
