@@ -1,0 +1,11 @@
+version: "3.9"
+
+services:
+  crawler:
+    build: .
+    container_name: bbc_goodfood_crawler
+    ports:
+      - "8111:8111"
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
