@@ -7,41 +7,40 @@ import os
 import json
 import time
 import requests
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Body
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from dotenv import load_dotenv
 
+load_dotenv()
+
+# ---------- Config ----------
+BBC_REQUEST_DELAY = float(os.getenv("BBC_REQUEST_DELAY", 1))
+MAX_CONCURRENCY = int(os.getenv("MAX_CONCURRENCY", 4))
+
+DATA_DIR = "data"
+os.makedirs(DATA_DIR, exist_ok=True)
+OUTPUT_FILE = os.path.join(DATA_DIR, "bbc_goodfood_mealie_import.txt")
+
+# ---------- FastAPI setup ----------
 app = FastAPI()
-
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 templates = Jinja2Templates(directory="app/templates")
 
-# ---------- CONFIG ----------
-DATA_DIR = "data"
-os.makedirs(DATA_DIR, exist_ok=True)
-
+# ---------- Globals ----------
 START_URL = "https://www.bbcgoodfood.com/recipes"
-OUTPUT_FILE = os.path.join(DATA_DIR, "bbc_goodfood_mealie_import.txt")
-
-BBC_REQUEST_DELAY = 1  # seconds
-MAX_CONCURRENCY = 4
-
-MEALIE_API_URL = "http://your_mealie_host:9000/api/recipes/import"
-MEALIE_API_KEY = "YOUR_MEALIE_API_KEY"
-MEALIE_RATE_LIMIT = 2
-
-USER_AGENT = (
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-    "AppleWebKit/537.36 (KHTML, like Gecko) "
-    "Chrome/122.0.0.0 Safari/537.36"
-)
-
 visited_pages = set()
 queued_pages = set()
 found_recipes = set()
+found_recipes_live = []
+
 crawl_progress = {"pages":0, "recipes":0, "status":"idle"}
 upload_progress = {"index":0, "total":0, "status":"idle"}
+cancel_flag = {"crawl": False, "upload": False}
+
+# Mealie config (set dynamically via UI)
+runtime_mealie_config = {"url": None, "key": None, "rate_limit": 2}
 
 # ---------- Resume ----------
 if os.path.exists(OUTPUT_FILE):
@@ -50,6 +49,12 @@ if os.path.exists(OUTPUT_FILE):
             found_recipes.add(line.strip())
 
 # ---------- Helpers ----------
+USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/122.0.0.0 Safari/537.36"
+)
+
 def is_recipe_url(url: str) -> bool:
     parsed = urlparse(url)
     return parsed.netloc == "www.bbcgoodfood.com" and parsed.path.startswith("/recipes/") and parsed.path.count("/") >= 2
@@ -82,8 +87,11 @@ def is_true_recipe(html: str) -> bool:
 
 # ---------- Crawl Worker ----------
 async def worker(queue, session):
-    while True:
-        url = await queue.get()
+    while not cancel_flag["crawl"]:
+        try:
+            url = await asyncio.wait_for(queue.get(), timeout=1)
+        except asyncio.TimeoutError:
+            break
         if url in visited_pages:
             queue.task_done()
             continue
@@ -100,6 +108,7 @@ async def worker(queue, session):
                 recipe_html = await fetch(session, link)
                 if recipe_html and is_true_recipe(recipe_html):
                     found_recipes.add(link)
+                    found_recipes_live.append(link)
                     crawl_progress["recipes"] = len(found_recipes)
                     with open(OUTPUT_FILE, "a", encoding="utf-8") as f:
                         f.write(link+"\n")
@@ -109,8 +118,22 @@ async def worker(queue, session):
         queue.task_done()
 
 # ---------- Crawl Start ----------
-@app.get("/start_crawl")
-async def start_crawl():
+@app.post("/start_crawl")
+async def start_crawl_api(config: dict = Body(...)):
+    """
+    Expects JSON:
+    {
+        "mealie_url": "http://localhost:9000/api/recipes/import",
+        "api_key": "your_key_here",
+        "rate_limit": 2
+    }
+    """
+    runtime_mealie_config["url"] = config.get("mealie_url")
+    runtime_mealie_config["key"] = config.get("api_key")
+    runtime_mealie_config["rate_limit"] = float(config.get("rate_limit", 2))
+
+    cancel_flag["crawl"] = False
+    cancel_flag["upload"] = False
     asyncio.create_task(crawl_bbc())
     return {"status":"started"}
 
@@ -131,28 +154,36 @@ async def crawl_bbc():
         for w in workers:
             w.cancel()
     crawl_progress["status"]="done"
-    # after crawling, push to Mealie
     await push_mealie()
 
 # ---------- Push to Mealie ----------
 async def push_mealie():
     upload_progress["status"]="running"
-    if not os.path.exists(OUTPUT_FILE):
+    if not os.path.exists(OUTPUT_FILE) or not runtime_mealie_config["url"] or not runtime_mealie_config["key"]:
         upload_progress["status"]="done"
         return
-    headers = {"Authorization": f"Bearer {MEALIE_API_KEY}", "Content-Type": "application/json"}
+    headers = {"Authorization": f"Bearer {runtime_mealie_config['key']}", "Content-Type": "application/json"}
     with open(OUTPUT_FILE,"r",encoding="utf-8") as f:
         urls = [line.strip() for line in f if line.strip()]
     upload_progress["total"] = len(urls)
     for idx,url in enumerate(urls,start=1):
-        payload = {"url": url}
+        if cancel_flag["upload"]:
+            break
         try:
-            r = requests.post(MEALIE_API_URL, headers=headers, json=payload)
+            requests.post(runtime_mealie_config["url"], headers=headers, json={"url": url})
         except Exception:
             pass
+        found_recipes_live.append(url)
         upload_progress["index"]=idx
-        time.sleep(MEALIE_RATE_LIMIT)
+        time.sleep(runtime_mealie_config["rate_limit"])
     upload_progress["status"]="done"
+
+# ---------- Cancel ----------
+@app.get("/cancel")
+async def cancel_tasks():
+    cancel_flag["crawl"] = True
+    cancel_flag["upload"] = True
+    return {"status": "cancelled"}
 
 # ---------- Progress Endpoints ----------
 @app.get("/progress/crawl")
@@ -162,6 +193,10 @@ async def crawl_status():
 @app.get("/progress/upload")
 async def upload_status():
     return upload_progress
+
+@app.get("/progress/recipes")
+async def live_recipes():
+    return JSONResponse({"recipes": found_recipes_live})
 
 # ---------- Download ----------
 @app.get("/download")
