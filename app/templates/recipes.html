@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Recipe History</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="container">
+<h1>All Crawled Recipes</h1>
+
+<div class="card">
+<button onclick="download('txt')">Download TXT</button>
+<button onclick="download('csv')">Download CSV</button>
+<button onclick="download('excel')">Download Excel</button>
+<a href="/">Back to Crawl</a>
+</div>
+
+<div class="card">
+<table border="1" style="width:100%; border-collapse: collapse;">
+<tr><th>#</th><th>Recipe URL</th></tr>
+{% for idx, url in enumerate(recipes) %}
+<tr><td>{{idx+1}}</td><td><a href="{{url}}" target="_blank">{{url}}</a></td></tr>
+{% endfor %}
+</table>
+</div>
+</div>
+
+<script>
+function download(fmt){
+    window.location.href="/recipes/download/"+fmt;
+}
+</script>
+</body>
+</html>
