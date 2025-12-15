@@ -3,5 +3,6 @@ uvicorn[standard]
 aiohttp
 beautifulsoup4
 lxml
-tqdm
 jinja2
+tqdm
+requests
