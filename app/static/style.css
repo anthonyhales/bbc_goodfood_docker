@@ -1,4 +1,136 @@
-body{font-family:Arial;margin:20px;}
-button{padding:10px 20px;font-size:16px;margin-bottom:20px;}
-#crawlBar,#uploadBar{width:100%;height:25px;background:#eee;border-radius:5px;overflow:hidden;margin-bottom:5px;}
-#crawlInner,#uploadInner{height:100%;width:0%;background:#4CAF50;text-align:center;color:white;}
+/* General body */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f6f9;
+    margin: 0;
+    padding: 20px;
+    color: #333;
+}
+
+/* Headings */
+h1, h2 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+/* Container for all cards */
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* Card style */
+.card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 15px 0;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+/* Labels and inputs */
+label {
+    display: inline-block;
+    width: 140px;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+input[type="text"], input[type="number"] {
+    padding: 6px 10px;
+    margin: 5px 0;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    width: 300px;
+    font-size: 14px;
+}
+
+input[type="number"] {
+    width: 100px;
+}
+
+/* Buttons */
+button {
+    padding: 10px 20px;
+    margin: 5px 5px 0 0;
+    border: none;
+    border-radius: 6px;
+    background-color: #3498db;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+button:hover {
+    background-color: #2980b9;
+    transform: translateY(-1px);
+}
+
+/* Progress bars */
+#crawlBar, #uploadBar {
+    width: 100%;
+    background-color: #e0e0e0;
+    border-radius: 10px;
+    margin: 5px 0;
+    height: 25px;
+    position: relative;
+}
+
+#crawlInner, #uploadInner {
+    height: 100%;
+    background: linear-gradient(90deg, #3498db, #2980b9);
+    text-align: center;
+    line-height: 25px;
+    color: white;
+    border-radius: 10px;
+    width: 0%;
+    transition: width 0.5s;
+}
+
+/* Recipe list */
+#recipeList {
+    max-height: 300px;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 8px;
+    padding: 10px;
+    border: 1px solid #ccc;
+}
+
+#recipeList li {
+    padding: 6px;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+}
+
+#recipeList li:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+/* Links */
+a {
+    color: #3498db;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    input[type="text"], input[type="number"] {
+        width: 100%;
+    }
+    label {
+        display: block;
+        margin-top: 10px;
+    }
+}
