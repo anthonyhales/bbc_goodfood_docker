@@ -1,5 +1,4 @@
-body { font-family: Arial; margin: 40px; }
-button { padding: 10px 20px; font-size: 16px; }
-#progressContainer { width:100%; height:25px; background:#eee; margin-top:10px; border-radius:5px; overflow:hidden; }
-#progressBar { height:100%; width:0%; background:#4CAF50; text-align:center; color:white; }
-pre { background:#f2f2f2; padding:10px; border-radius:5px; }
+body{font-family:Arial;margin:20px;}
+button{padding:10px 20px;font-size:16px;margin-bottom:20px;}
+#crawlBar,#uploadBar{width:100%;height:25px;background:#eee;border-radius:5px;overflow:hidden;margin-bottom:5px;}
+#crawlInner,#uploadInner{height:100%;width:0%;background:#4CAF50;text-align:center;color:white;}
