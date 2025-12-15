@@ -2,21 +2,48 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>BBC Good Food Crawler</title>
+<title>BBC Good Food Pipeline</title>
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-<h1>BBC Good Food Recipe Crawler</h1>
-<button onclick="startCrawl()">Start Crawl</button>
-<div id="progressContainer">
-  <div id="progressBar">0%</div>
-</div>
-<pre id="status"></pre>
-<a href="/download" target="_blank">Download Mealie URL File</a>
+<h1>BBC Good Food → Mealie</h1>
+<button onclick="startCrawl()">Start Crawl & Upload</button>
+
+<h2>Crawl Progress</h2>
+<div id="crawlBar"><div id="crawlInner">0%</div></div>
+<p id="crawlStatus">Recipes: 0 | Pages: 0</p>
+
+<h2>Upload Progress</h2>
+<div id="uploadBar"><div id="uploadInner">0%</div></div>
+<p id="uploadStatus">0 / 0</p>
+
+<a href="/download" target="_blank">Download Mealie URLs</a>
 
 <script>
-async function startCrawl() {
-    const resp = await fetch('/start'); // Implement /start in main.py
+let crawlInterval, uploadInterval;
+function startCrawl(){
+    fetch('/start_crawl');
+    crawlInterval=setInterval(updateCrawl,1000);
+    uploadInterval=setInterval(updateUpload,1000);
+}
+async function updateCrawl(){
+    const resp=await fetch('/progress/crawl');
+    const data=await resp.json();
+    let percent=Math.floor((data.recipes/(data.recipes+1))*100);
+    document.getElementById('crawlInner').style.width=percent+'%';
+    document.getElementById('crawlInner').innerText=percent+'%';
+    document.getElementById('crawlStatus').innerText=`Recipes: ${data.recipes} | Pages: ${data.pages}`;
+    if(data.status==='done') clearInterval(crawlInterval);
+}
+async function updateUpload(){
+    const resp=await fetch('/progress/upload');
+    const data=await resp.json();
+    let percent=0;
+    if(data.total>0) percent=Math.floor(data.index/data.total*100);
+    document.getElementById('uploadInner').style.width=percent+'%';
+    document.getElementById('uploadInner').innerText=percent+'%';
+    document.getElementById('uploadStatus').innerText=`${data.index} / ${data.total}`;
+    if(data.status==='done') clearInterval(uploadInterval);
 }
 </script>
 </body>
