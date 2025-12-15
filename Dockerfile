@@ -6,10 +6,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app/ app/
-# Remove: COPY data/ data/
 
-EXPOSE 8111
+EXPOSE 8222
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8111"]
-
-
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8222"]
