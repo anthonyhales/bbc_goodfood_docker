@@ -6,35 +6,57 @@
 <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-<h1>BBC Good Food → Mealie</h1>
+<div class="container">
+  <h1>BBC Good Food → Mealie</h1>
 
-<h2>Mealie API Settings</h2>
-<label>API URL:</label>
-<input type="text" id="mealie_url" placeholder="http://localhost:9000/api/recipes/import" size="50"><br>
-<label>API Key:</label>
-<input type="text" id="api_key" placeholder="your_api_key_here" size="50"><br>
-<label>Rate Limit (s):</label>
-<input type="number" id="rate_limit" value="2" min="0.1" step="0.1"><br><br>
+  <!-- Mealie API Settings -->
+  <div class="card">
+    <h2>Mealie API Settings</h2>
+    <label>API URL:</label>
+    <input type="text" id="mealie_url" placeholder="http://localhost:9000/api/recipes/import"><br>
+    <label>API Key:</label>
+    <input type="text" id="api_key" placeholder="your_api_key_here"><br>
+    <label>Rate Limit (s):</label>
+    <input type="number" id="rate_limit" value="2" min="0.1" step="0.1"><br><br>
+    <button onclick="startCrawl()">Start Crawl & Upload</button>
+    <button onclick="cancelCrawl()">Cancel</button>
+  </div>
 
-<button onclick="startCrawl()">Start Crawl & Upload</button>
-<button onclick="cancelCrawl()">Cancel</button>
+  <!-- Crawl Progress -->
+  <div class="card">
+    <h2>Crawl Progress</h2>
+    <div id="crawlBar"><div id="crawlInner">0%</div></div>
+    <p id="crawlStatus">Recipes: 0 | Pages: 0</p>
+  </div>
 
-<h2>Crawl Progress</h2>
-<div id="crawlBar"><div id="crawlInner">0%</div></div>
-<p id="crawlStatus">Recipes: 0 | Pages: 0</p>
+  <!-- Upload Progress -->
+  <div class="card">
+    <h2>Upload Progress</h2>
+    <div id="uploadBar"><div id="uploadInner">0%</div></div>
+    <p id="uploadStatus">0 / 0</p>
+  </div>
 
-<h2>Upload Progress</h2>
-<div id="uploadBar"><div id="uploadInner">0%</div></div>
-<p id="uploadStatus">0 / 0</p>
+  <!-- Successfully Added Recipes -->
+  <div class="card">
+    <h2>Successfully Added Recipes</h2>
+    <ul id="recipeList"></ul>
+  </div>
 
-<h2>Successfully Added Recipes</h2>
-<ul id="recipeList" style="max-height:300px;overflow-y:scroll;"></ul>
+  <div class="card">
+    <a href="/download" target="_blank">Download Mealie URLs</a>
+  </div>
 
-<a href="/download" target="_blank">Download Mealie URLs</a>
+  <!-- Version Info -->
+  <div class="card">
+    <p>Version: <span id="version">loading...</span></p>
+    <p><a href="https://github.com/YOUR_USERNAME/YOUR_REPO" target="_blank">View on GitHub</a></p>
+  </div>
+</div>
 
 <script>
 let crawlInterval, uploadInterval, recipeInterval;
 
+// Start Crawl
 function startCrawl(){
     const payload = {
         mealie_url: document.getElementById('mealie_url').value,
@@ -51,12 +73,14 @@ function startCrawl(){
     recipeInterval=setInterval(updateRecipes,2000);
 }
 
+// Cancel Crawl/Upload
 function cancelCrawl(){
     fetch('/cancel');
     document.getElementById('crawlStatus').innerText="Cancelled";
     document.getElementById('uploadStatus').innerText="Cancelled";
 }
 
+// Crawl Progress Update
 async function updateCrawl(){
     const resp=await fetch('/progress/crawl');
     const data=await resp.json();
@@ -67,6 +91,7 @@ async function updateCrawl(){
     if(data.status==='done') clearInterval(crawlInterval);
 }
 
+// Upload Progress Update
 async function updateUpload(){
     const resp=await fetch('/progress/upload');
     const data=await resp.json();
@@ -78,6 +103,7 @@ async function updateUpload(){
     if(data.status==='done') clearInterval(uploadInterval);
 }
 
+// Live Recipe List Update
 async function updateRecipes(){
     const resp=await fetch('/progress/recipes');
     const data=await resp.json();
@@ -89,6 +115,23 @@ async function updateRecipes(){
         list.appendChild(li);
     });
 }
+
+// Load Version Info from GitHub
+async function loadVersion(){
+    try{
+        const resp=await fetch('https://api.github.com/repos/YOUR_USERNAME/YOUR_REPO/commits/main');
+        const data=await resp.json();
+        if(data && data.sha){
+            document.getElementById('version').innerText = data.sha.substring(0,7);
+        } else {
+            document.getElementById('version').innerText = "unknown";
+        }
+    } catch(e){
+        document.getElementById('version').innerText = "error";
+    }
+}
+
+loadVersion();
 </script>
 </body>
 </html>
