@@ -1,14 +1,11 @@
 version: "3.9"
 
 services:
-  crawler:
+  bbc-mealie:
     build: .
-    container_name: bbc_goodfood_pipeline
+    container_name: bbc_mealie
     ports:
       - "8222:8222"
     volumes:
-      - data:/app/data
+      - ./data:/app/data
     restart: unless-stopped
-
-volumes:
-  data:

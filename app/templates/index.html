@@ -9,17 +9,11 @@
 <div class="container">
   <h1>BBC Good Food → Mealie</h1>
 
-  <!-- Mealie API Settings -->
+  <!-- Crawl Controls -->
   <div class="card">
-    <h2>Mealie API Settings</h2>
-    <label>API URL:</label>
-    <input type="text" id="mealie_url" placeholder="http://localhost:9000/api/recipes/import"><br>
-    <label>API Key:</label>
-    <input type="text" id="api_key" placeholder="your_api_key_here"><br>
-    <label>Rate Limit (s):</label>
-    <input type="number" id="rate_limit" value="2" min="0.1" step="0.1"><br><br>
     <button onclick="startCrawl()">Start Crawl & Upload</button>
     <button onclick="cancelCrawl()">Cancel</button>
+    <a href="/settings">Settings</a> | <a href="/recipes">Recipe History</a>
   </div>
 
   <!-- Crawl Progress -->
@@ -36,12 +30,13 @@
     <p id="uploadStatus">0 / 0</p>
   </div>
 
-  <!-- Successfully Added Recipes -->
+  <!-- Live Recipes List -->
   <div class="card">
     <h2>Successfully Added Recipes</h2>
     <ul id="recipeList"></ul>
   </div>
 
+  <!-- Download -->
   <div class="card">
     <a href="/download" target="_blank">Download Mealie URLs</a>
   </div>
@@ -56,31 +51,19 @@
 <script>
 let crawlInterval, uploadInterval, recipeInterval;
 
-// Start Crawl
 function startCrawl(){
-    const payload = {
-        mealie_url: document.getElementById('mealie_url').value,
-        api_key: document.getElementById('api_key').value,
-        rate_limit: parseFloat(document.getElementById('rate_limit').value)
-    };
-    fetch('/start_crawl', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify(payload)
-    });
+    fetch('/start_crawl',{method:'POST'});
     crawlInterval=setInterval(updateCrawl,1000);
     uploadInterval=setInterval(updateUpload,1000);
     recipeInterval=setInterval(updateRecipes,2000);
 }
 
-// Cancel Crawl/Upload
 function cancelCrawl(){
     fetch('/cancel');
     document.getElementById('crawlStatus').innerText="Cancelled";
     document.getElementById('uploadStatus').innerText="Cancelled";
 }
 
-// Crawl Progress Update
 async function updateCrawl(){
     const resp=await fetch('/progress/crawl');
     const data=await resp.json();
@@ -91,7 +74,6 @@ async function updateCrawl(){
     if(data.status==='done') clearInterval(crawlInterval);
 }
 
-// Upload Progress Update
 async function updateUpload(){
     const resp=await fetch('/progress/upload');
     const data=await resp.json();
@@ -103,11 +85,10 @@ async function updateUpload(){
     if(data.status==='done') clearInterval(uploadInterval);
 }
 
-// Live Recipe List Update
 async function updateRecipes(){
     const resp=await fetch('/progress/recipes');
     const data=await resp.json();
-    const list = document.getElementById('recipeList');
+    const list=document.getElementById('recipeList');
     list.innerHTML="";
     data.recipes.forEach(url=>{
         const li=document.createElement("li");
@@ -116,24 +97,20 @@ async function updateRecipes(){
     });
 }
 
-// Load Version Info from GitHub
+// Version from GitHub Release
 async function loadVersion(){
-    try {
-        const resp = await fetch('https://api.github.com/repos/anthonyhales/bbc_goodfood_docker/releases/latest');
-        const data = await resp.json();
-        if(data && data.tag_name){
-            document.getElementById('version').innerText = data.tag_name;
-        } else {
-            document.getElementById('version').innerText = "unknown";
+    try{
+        let resp=await fetch('https://api.github.com/repos/YOUR_USERNAME/YOUR_REPO/releases/latest');
+        let data=await resp.json();
+        if(data && data.tag_name) document.getElementById('version').innerText=data.tag_name;
+        else {
+            resp=await fetch('https://api.github.com/repos/YOUR_USERNAME/YOUR_REPO/commits/main');
+            data=await resp.json();
+            document.getElementById('version').innerText=data.sha ? "commit "+data.sha.substring(0,7) : "unknown";
         }
-    } catch(e){
-        document.getElementById('version').innerText = "error";
-    }
+    }catch(e){document.getElementById('version').innerText="error";}
 }
 loadVersion();
 </script>
 </body>
 </html>
-
-
-

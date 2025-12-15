@@ -1,12 +1,18 @@
-FROM python:3.12-slim
+# Use official Python image
+FROM python:3.11-slim
 
+# Set working directory
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy app files
+COPY app/ ./app
+COPY data/ ./data
 
-COPY app/ app/
+# Install dependencies
+RUN pip install --no-cache-dir fastapi uvicorn[standard] aiohttp beautifulsoup4 lxml pandas xlsxwriter jinja2 requests
 
+# Expose port
 EXPOSE 8222
 
+# Run app
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8222"]
