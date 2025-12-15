@@ -119,7 +119,7 @@ async function updateRecipes(){
 // Load Version Info from GitHub
 async function loadVersion(){
     try{
-        const resp=await fetch('https://api.github.com/repos/YOUR_USERNAME/YOUR_REPO/commits/main');
+        const resp=await fetch('https://api.github.com/repos/anthonyhales/bbc_goodfood_docker/commits/main');
         const data=await resp.json();
         if(data && data.sha){
             document.getElementById('version').innerText = data.sha.substring(0,7);
@@ -135,3 +135,4 @@ loadVersion();
 </script>
 </body>
 </html>
+
