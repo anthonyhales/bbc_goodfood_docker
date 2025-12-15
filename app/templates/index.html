@@ -118,11 +118,11 @@ async function updateRecipes(){
 
 // Load Version Info from GitHub
 async function loadVersion(){
-    try{
-        const resp=await fetch('https://api.github.com/repos/anthonyhales/bbc_goodfood_docker/commits/main');
-        const data=await resp.json();
-        if(data && data.sha){
-            document.getElementById('version').innerText = data.sha.substring(0,7);
+    try {
+        const resp = await fetch('https://api.github.com/repos/nthonyhales/bbc_goodfood_docker/releases/latest');
+        const data = await resp.json();
+        if(data && data.tag_name){
+            document.getElementById('version').innerText = data.tag_name;
         } else {
             document.getElementById('version').innerText = "unknown";
         }
@@ -130,9 +130,9 @@ async function loadVersion(){
         document.getElementById('version').innerText = "error";
     }
 }
-
 loadVersion();
 </script>
 </body>
 </html>
+
 
