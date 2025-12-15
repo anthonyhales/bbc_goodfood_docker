@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Settings - Mealie API</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="container">
+<h1>Mealie API Settings</h1>
+<div class="card">
+<label>API URL:</label>
+<input type="text" id="api_url" value="{{ config.url }}"><br>
+<label>API Key:</label>
+<input type="text" id="api_key" value="{{ config.key }}"><br>
+<label>Rate Limit (s):</label>
+<input type="number" id="rate_limit" value="{{ config.rate_limit }}" min="0.1" step="0.1"><br><br>
+
+<button id="saveBtn" onclick="saveSettings()">Save</button>
+<button id="changeBtn" onclick="enableEditing()" style="display:none;">Change Details</button>
+<a href="/">Back to Crawl</a>
+</div>
+</div>
+
+<script>
+function disableInputs() {
+    document.getElementById('api_url').disabled = true;
+    document.getElementById('api_key').disabled = true;
+    document.getElementById('rate_limit').disabled = true;
+    document.getElementById('saveBtn').style.display = "none";
+    document.getElementById('changeBtn').style.display = "inline-block";
+}
+function enableEditing() {
+    document.getElementById('api_url').disabled=false;
+    document.getElementById('api_key').disabled=false;
+    document.getElementById('rate_limit').disabled=false;
+    document.getElementById('saveBtn').style.display="inline-block";
+    document.getElementById('changeBtn').style.display="none";
+}
+function saveSettings(){
+    const payload={
+        url: document.getElementById('api_url').value,
+        key: document.getElementById('api_key').value,
+        rate_limit: parseFloat(document.getElementById('rate_limit').value)
+    };
+    fetch('/settings/save',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+    }).then(resp=>{
+        if(resp.ok) disableInputs();
+    });
+}
+disableInputs();
+</script>
+</body>
+</html>
